@@ -10,10 +10,12 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/aframe-arkit@master/dist/aframe-arkit.min.js"></script>
 
-  <!-- Local files -->
+  <!-- Local Styles & Script -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Mode Switch Button -->
   <button id="modeBtn" class="mode-btn">Switch to Poisson</button>
 
   <!-- Gesture Hint -->
@@ -23,7 +25,11 @@
   <div class="control expanded" id="controlPanel">
     <div class="control-header" id="panelHeader">
       <span>Settings</span>
-      <span class="toggle-icon">Up Arrow</span>
+      <span class="toggle-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+      </span>
     </div>
     <div class="sliders">
       <div class="slider-container">
@@ -39,17 +45,18 @@
 
   <!-- A-Frame Scene -->
   <a-scene
-    embedded vr-mode-ui="enabled: false"
+    embedded
+    vr-mode-ui="enabled: false"
     renderer="colorManagement: true; physicallyCorrectLights: true;"
-    arjs="sourceType: webcam;" aframe-arkit aframe-arkit-device
+    arjs="sourceType: webcam;"
+    aframe-arkit
+    aframe-arkit-device
     light="ambientIntensity: 1.5;"
   >
-    <!-- Fixed scale ×3.0, drag + camera follow -->
     <a-entity id="modelGroup" scale="0.9 0.9 0.9" drag-only camera-follow></a-entity>
     <a-camera></a-camera>
   </a-scene>
 
   <script src="script.js"></script>
 </body>
-
 </html>
