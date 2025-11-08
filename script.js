@@ -225,7 +225,6 @@ scene.addEventListener('click', e => {
 window.onload = () => {
   setTimeout(() => {
     drawChart();
-    // *** No text shown after loading ***
-    infoEl.innerHTML = '';
   }, 1500);
 };
+
