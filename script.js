@@ -71,7 +71,6 @@ AFRAME.registerComponent('camera-follow', {
     const camera = this.el.sceneEl.camera;
     if (!camera) return;
 
-    // Compute target position in front of camera
     const forward = new THREE.Vector3(0, 0, -1);
     forward.applyQuaternion(camera.quaternion);
     forward.multiplyScalar(CHART_DISTANCE);
@@ -81,10 +80,8 @@ AFRAME.registerComponent('camera-follow', {
     targetPos.add(forward);
     targetPos.y += CHART_HEIGHT_OFFSET;
 
-    // Smooth movement
     el.object3D.position.lerp(targetPos, 0.1);
 
-    // Face camera (horizontal only)
     const lookAtPos = new THREE.Vector3(camera.position.x, el.object3D.position.y, camera.position.z);
     el.object3D.lookAt(lookAtPos);
   }
@@ -228,6 +225,7 @@ scene.addEventListener('click', e => {
 window.onload = () => {
   setTimeout(() => {
     drawChart();
-    infoEl.innerHTML = 'Binomial Distribution<br>Ready! Model follows camera.';
+    // *** No text shown after loading ***
+    infoEl.innerHTML = '';
   }, 1500);
 };
