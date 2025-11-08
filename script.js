@@ -1,17 +1,19 @@
 // ==================== Configuration ====================
-const BAR_WIDTH = 0.05, SPACING = 0.08;
+const BAR_WIDTH = 0.05;
+const SPACING = 0.08;
 const CHART_BASE_Y = 0.15;
 const MAX_HEIGHT = 0.8;
-const CHART_DISTANCE = 1.2;       // distance from camera
-const CHART_HEIGHT_OFFSET = 0.3; // height above camera
+const CHART_DISTANCE = 1.2;
+const CHART_HEIGHT_OFFSET = 0.3;
 
 // ==================== DOM Elements ====================
 const scene = document.querySelector('#modelGroup');
-const infoEl = document.getElementById('info');
 const controlPanel = document.getElementById('controlPanel');
 const panelHeader = document.getElementById('panelHeader');
-const nSlider = document.getElementById('nSlider'), pSlider = document.getElementById('pSlider');
-const nValue = document.getElementById('nValue'), pValue = document.getElementById('pValue');
+const nSlider = document.getElementById('nSlider');
+const pSlider = document.getElementById('pSlider');
+const nValue = document.getElementById('nValue');
+const pValue = document.getElementById('pValue');
 const modeBtn = document.getElementById('modeBtn');
 const nContainer = document.querySelectorAll('.slider-container')[0];
 const pContainer = document.querySelectorAll('.slider-container')[1];
@@ -39,6 +41,7 @@ AFRAME.registerComponent('drag-only', {
   init: function () {
     const el = this.el;
     let startX, startZ, isDragging = false;
+
     el.addEventListener('gesturestart', e => {
       if (e.detail.touches === 1) {
         const pos = el.object3D.position;
@@ -47,6 +50,7 @@ AFRAME.registerComponent('drag-only', {
         document.body.classList.add('ui-dragging');
       }
     });
+
     el.addEventListener('gesturechange', e => {
       if (isDragging && e.detail.touches === 1) {
         const delta = e.detail.delta;
@@ -54,6 +58,7 @@ AFRAME.registerComponent('drag-only', {
         el.object3D.position.z = startZ + delta.z * 0.001;
       }
     });
+
     el.addEventListener('gestureend', () => {
       isDragging = false;
       document.body.classList.remove('ui-dragging');
@@ -63,9 +68,6 @@ AFRAME.registerComponent('drag-only', {
 
 // ==================== Camera Follow ====================
 AFRAME.registerComponent('camera-follow', {
-  init: function () {
-    this.initialized = false;
-  },
   tick: function () {
     const el = this.el;
     const camera = this.el.sceneEl.camera;
@@ -105,15 +107,15 @@ function binomialData(n, p) {
 }
 
 function poissonData(lambda) {
-  if (lambda <= 0) return [{k: 0, pk: 1}];
+  if (lambda <= 0) return [{ k: 0, pk: 1 }];
   const data = [];
   let pk = Math.exp(-lambda);
   let cumProb = pk;
-  data.push({k: 0, pk});
+  data.push({ k: 0, pk });
   let k = 1;
   while (cumProb < 0.999 || pk > 1e-5) {
     pk = pk * lambda / k;
-    data.push({k, pk});
+    data.push({ k, pk });
     cumProb += pk;
     k++;
     if (k > lambda + 50) break;
@@ -124,14 +126,12 @@ function poissonData(lambda) {
 // ==================== Draw Chart ====================
 function drawChart() {
   while (scene.firstChild) scene.removeChild(scene.firstChild);
-  let data, mean;
-  if (currentMode === 'binomial') {
-    data = binomialData(currentN, currentP);
-    mean = currentN * currentP;
-  } else {
-    data = poissonData(currentLambda);
-    mean = currentLambda;
-  }
+
+  const data = currentMode === 'binomial'
+    ? binomialData(currentN, currentP)
+    : poissonData(currentLambda);
+
+  const mean = currentMode === 'binomial' ? currentN * currentP : currentLambda;
   const maxProb = data.reduce((m, d) => Math.max(m, d.pk), 0) || 1;
   const scaleY = MAX_HEIGHT / maxProb;
 
@@ -140,6 +140,7 @@ function drawChart() {
     const height = Math.max(d.pk * scaleY, 0.001);
     const xPos = (d.k - mean) * SPACING;
 
+    // Bar
     const bar = document.createElement('a-box');
     bar.setAttribute('position', `${xPos} ${CHART_BASE_Y + height / 2} 0`);
     bar.setAttribute('width', BAR_WIDTH);
@@ -151,6 +152,7 @@ function drawChart() {
     bar.setAttribute('data-pk', d.pk.toFixed(6));
     scene.appendChild(bar);
 
+    // Label
     const label = document.createElement('a-text');
     label.setAttribute('value', d.k);
     label.setAttribute('position', `${xPos} ${CHART_BASE_Y - 0.03} 0`);
@@ -161,6 +163,7 @@ function drawChart() {
     scene.appendChild(label);
   });
 
+  // Ground Plane
   const groundWidth = (data.length - 1) * SPACING + BAR_WIDTH + 0.1;
   const ground = document.createElement('a-plane');
   ground.setAttribute('position', `0 ${CHART_BASE_Y} 0`);
@@ -173,6 +176,7 @@ function drawChart() {
   scene.appendChild(ground);
 }
 
+// ==================== Update Chart ====================
 function updateChart() { drawChart(); }
 
 // ==================== Sliders ====================
@@ -181,6 +185,7 @@ nSlider.addEventListener('input', () => {
   nValue.textContent = currentN;
   updateChart();
 });
+
 pSlider.addEventListener('input', () => {
   const val = parseFloat(pSlider.value);
   if (currentMode === 'binomial') currentP = val;
@@ -198,7 +203,7 @@ modeBtn.addEventListener('click', () => {
     nContainer.style.display = 'none';
     pSlider.min = '0.1'; pSlider.max = '30'; pSlider.step = '0.1';
     pSlider.value = lastLambda; currentLambda = lastLambda;
-    pLabel.innerHTML = `λ (mean): <span class="slider-value" id="pValue">${lastLambda.toFixed(2)}</span>`;
+    pLabel.innerHTML = `λ (mean): <span class="slider-value">${lastLambda.toFixed(2)}</span>`;
   } else {
     lastLambda = currentLambda;
     currentMode = 'binomial';
@@ -207,24 +212,21 @@ modeBtn.addEventListener('click', () => {
     pSlider.min = '0'; pSlider.max = '1'; pSlider.step = '0.01';
     pSlider.value = lastP; currentN = lastN;
     nSlider.value = currentN; nValue.textContent = currentN;
-    pLabel.innerHTML = `p (probability): <span class="slider-value" id="pValue">${lastP.toFixed(2)}</span>`;
+    pLabel.innerHTML = `p (probability): <span class="slider-value">${lastP.toFixed(2)}</span>`;
   }
   updateChart();
-  infoEl.innerHTML = `${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} Distribution`;
 });
 
 // ==================== Click for Probability ====================
 scene.addEventListener('click', e => {
   if (e.target.classList.contains('clickable')) {
-    const k = e.target.getAttribute('data-k'), pk = e.target.getAttribute('data-pk');
+    const k = e.target.getAttribute('data-k');
+    const pk = e.target.getAttribute('data-pk');
     alert(`P(X=${k}) = ${pk}`);
   }
 });
 
 // ==================== Initialize ====================
 window.onload = () => {
-  setTimeout(() => {
-    drawChart();
-  }, 1500);
+  setTimeout(drawChart, 1500);
 };
-
